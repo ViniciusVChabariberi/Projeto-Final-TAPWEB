@@ -1,98 +1,297 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
+const MOCK_PARTIDAS = [
+  { id: '1', timeA: 'Brasil', timeB: 'Argentina', data: '20/11 • 16:00', status: 'aberta', placarA: '', placarB: '' },
+  { id: '2', timeA: 'Espanha', timeB: 'França', data: '21/11 • 14:00', status: 'aberta', placarA: '', placarB: '' },
+  { id: '3', timeA: 'Alemanha', timeB: 'Japão', data: '15/11 • Encerrado', status: 'encerrada', placarA: '2', placarB: '1', resultadoRealA: 2, resultadoRealB: 1 },
+  { id: '4', timeA: 'Inglaterra', timeB: 'Itália', data: '14/11 • Encerrado', status: 'encerrada', placarA: '0', placarB: '0', resultadoRealA: 1, resultadoRealB: 2 },
+];
+
+export default function DashboardScreen() {
+  const [partidas, setPartidas] = useState(MOCK_PARTIDAS);
+
+  const atualizarPalpite = (id: string, time: 'A' | 'B', valor: string) => {
+    setPartidas(prev =>
+      prev.map(p =>
+        p.id === id
+          ? { ...p, [time === "A" ? "placarA" : "placarB"]: valor }
+          : p
+      )
+    );
+  };
+
+  const salvarPalpite = (id: string) => {
+    alert(`Palpite enviado!`);
+  };
+
+  const renderCard = ({ item }: { item: any }) => {
+    const isEncerrada = item.status === 'encerrada';
+    const acertou = isEncerrada && item.placarA == item.resultadoRealA && item.placarB == item.resultadoRealB;
+
+    return (
+      <View style={[
+        styles.card,
+        isEncerrada && (acertou ? styles.cardAcerto : styles.cardErro)
+      ]}>
+
+        <View style={styles.cardHeader}>
+          <Text style={styles.date}>{item.data}</Text>
+          {isEncerrada && (
+            <View style={[styles.statusBadge, acertou ? styles.badgeAcerto : styles.badgeErro]}>
+              <Text style={[styles.status, acertou ? styles.acerto : styles.erro]}>
+                {acertou ? "✔ Acertou!" : "✘ Errou"}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.match}>
+          <View style={styles.team}>
+            <Text style={styles.teamName}>{item.timeA}</Text>
+
+            {isEncerrada ? (
+              <Text style={styles.scoreFinal}>
+                {item.resultadoRealA} <Text style={styles.palpite}>({item.placarA})</Text>
+              </Text>
+            ) : (
+              <TextInput
+                style={styles.input}
+                value={item.placarA}
+                maxLength={2}
+                keyboardType="numeric"
+                onChangeText={t => atualizarPalpite(item.id, "A", t)}
+                placeholder="0"
+                placeholderTextColor="#CBD5E1"
               />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+            )}
+          </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+          <Text style={styles.x}>×</Text>
+
+          <View style={styles.team}>
+            <Text style={styles.teamName}>{item.timeB}</Text>
+
+            {isEncerrada ? (
+              <Text style={styles.scoreFinal}>
+                {item.resultadoRealB} <Text style={styles.palpite}>({item.placarB})</Text>
+              </Text>
+            ) : (
+              <TextInput
+                style={styles.input}
+                value={item.placarB}
+                maxLength={2}
+                keyboardType="numeric"
+                onChangeText={t => atualizarPalpite(item.id, "B", t)}
+                placeholder="0"
+                placeholderTextColor="#CBD5E1"
+              />
+            )}
+          </View>
+        </View>
+
+        {!isEncerrada && (
+          <TouchableOpacity 
+            style={styles.button} 
+            onPress={() => salvarPalpite(item.id)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.buttonText}>Enviar Palpite</Text>
+          </TouchableOpacity>
+        )}
+
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Meus Palpites</Text>
+        <Text style={styles.subtitle}>Faça suas previsões e acompanhe os resultados</Text>
+      </View>
+
+      <FlatList
+        data={partidas}
+        renderItem={renderCard}
+        keyExtractor={i => i.id}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
   );
 }
 
+
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: "#F8FAFB",
+    paddingTop: 60,
+    paddingHorizontal: 20,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+
+  header: {
+    marginBottom: 28,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+
+  title: {
+    fontSize: 34,
+    fontWeight: "900",
+    color: "#0F172A",
+    marginBottom: 6,
+    letterSpacing: -0.5,
+  },
+
+  subtitle: {
+    fontSize: 15,
+    color: "#64748B",
+    fontWeight: "500",
+  },
+
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+
+    elevation: 4,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+
+    borderWidth: 1,
+    borderColor: "rgba(15, 23, 42, 0.06)",
+  },
+
+  cardAcerto: {
+    backgroundColor: "#ECFDF5",
+    borderColor: "#10B981",
+    borderWidth: 2,
+  },
+
+  cardErro: {
+    backgroundColor: "#FEF2F2",
+    borderColor: "#EF4444",
+    borderWidth: 2,
+  },
+
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+
+  date: {
+    fontSize: 13,
+    color: "#64748B",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+
+  badgeAcerto: {
+    backgroundColor: "#D1FAE5",
+  },
+
+  badgeErro: {
+    backgroundColor: "#FEE2E2",
+  },
+
+  status: {
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  acerto: { 
+    color: "#059669",
+  },
+  
+  erro: { 
+    color: "#DC2626",
+  },
+
+  match: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 16,
+    paddingVertical: 8,
+  },
+
+  team: {
+    flex: 1,
+    alignItems: "center",
+  },
+
+  teamName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1E293B",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+
+  x: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#94A3B8",
+    paddingHorizontal: 16,
+  },
+
+  input: {
+    width: 64,
+    height: 64,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "#CBD5E1",
+    textAlign: "center",
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+
+  scoreFinal: {
+    fontSize: 32,
+    fontWeight: "900",
+    color: "#0F172A",
+  },
+
+  palpite: {
+    fontSize: 18,
+    color: "#64748B",
+    fontWeight: "600",
+  },
+
+  button: {
+    backgroundColor: "#0EA5E9",
+    paddingVertical: 16,
+    borderRadius: 14,
+    marginTop: 12,
+    alignItems: "center",
+
+    shadowColor: "#0EA5E9",
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+  },
+
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
   },
 });
