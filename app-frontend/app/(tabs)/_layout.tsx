@@ -63,7 +63,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Ranking */}
+      
       <Tabs.Screen
         name="ranking"
         options={{
