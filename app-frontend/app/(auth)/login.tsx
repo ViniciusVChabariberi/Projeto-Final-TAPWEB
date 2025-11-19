@@ -62,11 +62,13 @@ export default function Login() {
           </TouchableOpacity>
         </View>
 
-        
-        <TouchableOpacity style={styles.forgotPassword}>
+        <TouchableOpacity 
+          style={styles.forgotPassword}
+          onPress={() => router.push("/(auth)/forgot")} 
+        >
           <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
         </TouchableOpacity>
-
+    
       
         <TouchableOpacity
           onPress={handleLogin}
