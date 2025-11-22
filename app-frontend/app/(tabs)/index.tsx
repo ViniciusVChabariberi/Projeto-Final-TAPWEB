@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
-
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Modal, Pressable } from 'react-native';
 
 const MOCK_PARTIDAS = [
   { id: '1', timeA: 'Brasil', timeB: 'Argentina', data: '20/11 • 16:00', status: 'aberta', placarA: '', placarB: '' },
@@ -12,6 +11,8 @@ const MOCK_PARTIDAS = [
 export default function DashboardScreen() {
   const [partidas, setPartidas] = useState(MOCK_PARTIDAS);
 
+  const [modalVisible, setModalVisible] = useState(false);
+
   const atualizarPalpite = (id: string, time: 'A' | 'B', valor: string) => {
     setPartidas(prev =>
       prev.map(p =>
@@ -22,8 +23,8 @@ export default function DashboardScreen() {
     );
   };
 
-  const salvarPalpite = (id: string) => {
-    alert(`Palpite enviado!`);
+  const salvarPalpite = () => {
+    setModalVisible(true); 
   };
 
   const renderCard = ({ item }: { item: any }) => {
@@ -94,7 +95,7 @@ export default function DashboardScreen() {
         {!isEncerrada && (
           <TouchableOpacity 
             style={styles.button} 
-            onPress={() => salvarPalpite(item.id)}
+            onPress={() => salvarPalpite()}
             activeOpacity={0.8}
           >
             <Text style={styles.buttonText}>Enviar Palpite</Text>
@@ -119,10 +120,33 @@ export default function DashboardScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       />
+
+     
+
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Palpite enviado!</Text>
+            <Text style={styles.modalText}>Seu palpite foi registrado com sucesso.</Text>
+
+            <Pressable
+              onPress={() => setModalVisible(false)}
+              style={styles.modalButton}
+            >
+              <Text style={styles.modalButtonText}>OK</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -293,5 +317,55 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0.8,
     textTransform: "uppercase",
+  },
+
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+
+  modalContent: {
+    width: "85%",
+    backgroundColor: "#FFF",
+    padding: 24,
+    borderRadius: 20,
+
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 10,
+    elevation: 10,
+  },
+
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#0F172A",
+    textAlign: "center",
+    marginBottom: 6,
+  },
+
+  modalText: {
+    textAlign: "center",
+    fontSize: 15,
+    color: "#475569",
+    marginBottom: 20,
+  },
+
+  modalButton: {
+    backgroundColor: "#0EA5E9",
+    paddingVertical: 14,
+    borderRadius: 14,
+  },
+
+  modalButtonText: {
+    textAlign: "center",
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "800",
   },
 });

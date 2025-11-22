@@ -1,14 +1,14 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from "react-native";
 import { useState } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
   function handleReset() {
-   
-    alert("Link de recuperação enviado!");
+    setShowModal(true);
   }
 
   return (
@@ -55,6 +55,29 @@ export default function ForgotPassword() {
         </TouchableOpacity>
 
       </View>
+
+      
+  
+      <Modal transparent visible={showModal} animationType="fade">
+        <View style={modalStyles.overlay}>
+          <View style={modalStyles.modalBox}>
+
+            <Text style={modalStyles.modalTitle}>Link enviado!</Text>
+            <Text style={modalStyles.modalSubtitle}>
+              Enviamos um link de recuperação para o seu email.
+            </Text>
+
+            <TouchableOpacity
+              style={modalStyles.modalButton}
+              onPress={() => setShowModal(false)}
+            >
+              <Text style={modalStyles.modalButtonText}>Fechar</Text>
+            </TouchableOpacity>
+
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
@@ -179,6 +202,60 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: "#0EA5E9",
     fontSize: 15,
+    fontWeight: "700",
+  },
+});
+
+
+
+
+const modalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+
+  modalBox: {
+    width: "100%",
+    borderRadius: 24,
+    padding: 26,
+    backgroundColor: "white",
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 10,
+    alignItems: "center",
+  },
+
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+    marginBottom: 8,
+    color: "#0F172A",
+  },
+
+  modalSubtitle: {
+    fontSize: 16,
+    color: "#475569",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+
+  modalButton: {
+    backgroundColor: "#0EA5E9",
+    paddingVertical: 14,
+    width: "100%",
+    alignItems: "center",
+    borderRadius: 14,
+  },
+
+  modalButtonText: {
+    color: "white",
+    fontSize: 16,
     fontWeight: "700",
   },
 });

@@ -1,29 +1,75 @@
-import { Link } from 'expo-router';
-import { StyleSheet } from 'react-native';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { View, Text, TouchableOpacity, StyleSheet, Modal } from "react-native";
+import { router } from "expo-router";
 
 export default function ModalScreen() {
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">This is a modal</ThemedText>
-      <Link href="/" dismissTo style={styles.link}>
-        <ThemedText type="link">Go to home screen</ThemedText>
-      </Link>
-    </ThemedView>
+    <View style={styles.overlay}>
+     
+      <View style={styles.card}>
+        <Text style={styles.title}>Informação</Text>
+
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={() => router.dismiss()}
+        >
+          <Text style={styles.buttonText}>Fechar</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  overlay: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
   },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
+
+  card: {
+    width: "100%",
+    backgroundColor: "#FFFFFF",
+    padding: 28,
+    borderRadius: 24,
+
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+
+  title: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 8,
+  },
+
+  message: {
+    fontSize: 16,
+    color: "#475569",
+    marginBottom: 24,
+  },
+
+  button: {
+    backgroundColor: "#0EA5E9",
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: "center",
+
+    shadowColor: "#0EA5E9",
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+
+  buttonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });

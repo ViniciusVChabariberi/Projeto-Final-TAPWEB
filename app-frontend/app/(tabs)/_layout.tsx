@@ -45,7 +45,7 @@ export default function TabLayout() {
         animation: 'shift',
       }}
     >
-      {/* Palpites */}
+
       <Tabs.Screen
         name="index"
         options={{
