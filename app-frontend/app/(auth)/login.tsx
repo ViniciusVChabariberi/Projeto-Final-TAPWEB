@@ -2,19 +2,36 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-nativ
 import { useState } from "react";
 import { router } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
+import { api } from "../../services/api";
+import { Alert } from "react-native";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  function handleLogin() {
-    router.replace("/(tabs)");
+  async function handleLogin() {
+    if (!email || !senha) {
+      Alert.alert("Erro", "Preencha todos os campos");
+      return;
+    }
+
+    try {
+      const resultado = await api.login(email, senha);
+
+      if (resultado.success) {
+        router.replace("/(tabs)");
+      } else {
+        Alert.alert("Erro", "Email ou senha inválidos");
+      }
+    } catch (e) {
+      Alert.alert("Erro", "Falha na conexão");
+    }
   }
 
   return (
     <View style={styles.container}>
-      
+
       <View style={styles.headerContainer}>
         <View style={styles.iconContainer}>
           <Ionicons name="football" size={48} color="#0EA5E9" />
@@ -23,9 +40,9 @@ export default function Login() {
         <Text style={styles.subtitle}>Faça login para continuar</Text>
       </View>
 
-  
+
       <View style={styles.card}>
-      
+
         <View style={styles.inputContainer}>
           <Ionicons name="mail-outline" size={20} color="#64748B" style={styles.inputIcon} />
           <TextInput
@@ -39,7 +56,7 @@ export default function Login() {
           />
         </View>
 
-     
+
         <View style={styles.inputContainer}>
           <Ionicons name="lock-closed-outline" size={20} color="#64748B" style={styles.inputIcon} />
           <TextInput
@@ -50,26 +67,26 @@ export default function Login() {
             style={styles.input}
             placeholderTextColor="#94A3B8"
           />
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => setShowPassword(!showPassword)}
             style={styles.eyeIcon}
           >
-            <Ionicons 
-              name={showPassword ? "eye-outline" : "eye-off-outline"} 
-              size={20} 
-              color="#64748B" 
+            <Ionicons
+              name={showPassword ? "eye-outline" : "eye-off-outline"}
+              size={20}
+              color="#64748B"
             />
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.forgotPassword}
-          onPress={() => router.push("/(auth)/forgot")} 
+          onPress={() => router.push("/(auth)/forgot")}
         >
           <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
         </TouchableOpacity>
-    
-      
+
+
         <TouchableOpacity
           onPress={handleLogin}
           style={styles.loginButton}
@@ -79,14 +96,14 @@ export default function Login() {
           <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
         </TouchableOpacity>
 
-        
+
         <View style={styles.divider}>
           <View style={styles.dividerLine} />
           <Text style={styles.dividerText}>ou</Text>
           <View style={styles.dividerLine} />
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => router.push("/(auth)/register")}
           style={styles.registerButton}
           activeOpacity={0.7}
@@ -96,7 +113,7 @@ export default function Login() {
         </TouchableOpacity>
       </View>
 
-    
+
       <Text style={styles.footer}>
         Ao continuar, você concorda com nossos{"\n"}
         <Text style={styles.footerLink}>Termos de Uso</Text> e <Text style={styles.footerLink}>Política de Privacidade</Text>

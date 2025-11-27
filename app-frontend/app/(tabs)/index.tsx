@@ -1,17 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Modal, Pressable } from 'react-native';
+import { api } from "../../services/api";
 
-const MOCK_PARTIDAS = [
-  { id: '1', timeA: 'Brasil', timeB: 'Argentina', data: '20/11 • 16:00', status: 'aberta', placarA: '', placarB: '' },
-  { id: '2', timeA: 'Espanha', timeB: 'França', data: '21/11 • 14:00', status: 'aberta', placarA: '', placarB: '' },
-  { id: '3', timeA: 'Alemanha', timeB: 'Japão', data: '15/11 • Encerrado', status: 'encerrada', placarA: '2', placarB: '1', resultadoRealA: 2, resultadoRealB: 1 },
-  { id: '4', timeA: 'Inglaterra', timeB: 'Itália', data: '14/11 • Encerrado', status: 'encerrada', placarA: '0', placarB: '0', resultadoRealA: 1, resultadoRealB: 2 },
-];
+interface Partida {
+  id: string;
+  timeA: string;
+  timeB: string;
+  data: string;
+  status?: string;
+  placarA?: string | number;
+  placarB?: string | number;
+  resultadoRealA?: number;
+  resultadoRealB?: number;
+  placarRealA?: number;
+  placarRealB?: number;
+}
 
 export default function DashboardScreen() {
-  const [partidas, setPartidas] = useState(MOCK_PARTIDAS);
-
+  const [partidas, setPartidas] = useState<Partida[]>([]);
+  const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+
+  const fetchPartidas = async () => {
+    try {
+      setLoading(true);
+      const dadosDoBack = await api.getPartidas();
+      setPartidas(dadosDoBack);
+    } catch (error) {
+      console.log("Erro ao carregar dashboard");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPartidas();
+  }, []);
 
   const atualizarPalpite = (id: string, time: 'A' | 'B', valor: string) => {
     setPartidas(prev =>
@@ -23,13 +47,27 @@ export default function DashboardScreen() {
     );
   };
 
-  const salvarPalpite = () => {
-    setModalVisible(true); 
+  const enviarPalpiteEspecifico = async (item: Partida) => {
+    if (!item.placarA || !item.placarB) {
+      alert("Preencha o placar!");
+      return;
+    }
+
+    const resultado = await api.enviarPalpite(item.id, item.placarA, item.placarB);
+
+    if (resultado.success) {
+      setModalVisible(true);
+    } else {
+      alert("Erro: " + resultado.message);
+    }
   };
 
   const renderCard = ({ item }: { item: any }) => {
-    const isEncerrada = item.status === 'encerrada';
-    const acertou = isEncerrada && item.placarA == item.resultadoRealA && item.placarB == item.resultadoRealB;
+    const statusNormalizado = item.status ? item.status.toLowerCase() : 'aberta';
+    const isEncerrada = statusNormalizado === 'encerrada' || statusNormalizado === 'apurada';
+    const realA = item.placarRealA ?? item.resultadoRealA;
+    const realB = item.placarRealB ?? item.resultadoRealB;
+    const acertou = isEncerrada && item.placarA == realA && item.placarB == realB;
 
     return (
       <View style={[
@@ -54,7 +92,7 @@ export default function DashboardScreen() {
 
             {isEncerrada ? (
               <Text style={styles.scoreFinal}>
-                {item.resultadoRealA} <Text style={styles.palpite}>({item.placarA})</Text>
+                {item.placarRealA} <Text style={styles.palpite}>({item.placarA})</Text>
               </Text>
             ) : (
               <TextInput
@@ -76,7 +114,7 @@ export default function DashboardScreen() {
 
             {isEncerrada ? (
               <Text style={styles.scoreFinal}>
-                {item.resultadoRealB} <Text style={styles.palpite}>({item.placarB})</Text>
+                {item.placarRealB} <Text style={styles.palpite}>({item.placarB})</Text>
               </Text>
             ) : (
               <TextInput
@@ -93,9 +131,9 @@ export default function DashboardScreen() {
         </View>
 
         {!isEncerrada && (
-          <TouchableOpacity 
-            style={styles.button} 
-            onPress={() => salvarPalpite()}
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => enviarPalpiteEspecifico(item)}
             activeOpacity={0.8}
           >
             <Text style={styles.buttonText}>Enviar Palpite</Text>
@@ -111,17 +149,22 @@ export default function DashboardScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Meus Palpites</Text>
         <Text style={styles.subtitle}>Faça suas previsões e acompanhe os resultados</Text>
+        <TouchableOpacity onPress={fetchPartidas}>
+          <Text style={{ color: '#0EA5E9', marginTop: 5 }}>↻ Atualizar Lista</Text>
+        </TouchableOpacity>
       </View>
 
       <FlatList
         data={partidas}
         renderItem={renderCard}
-        keyExtractor={i => i.id}
+        keyExtractor={i => i.id || Math.random().toString()}
+        refreshing={loading}
+        onRefresh={fetchPartidas}
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       />
 
-     
+
 
       <Modal
         visible={modalVisible}
@@ -143,7 +186,7 @@ export default function DashboardScreen() {
         </View>
       </Modal>
 
-      
+
     </View>
   );
 }
@@ -236,11 +279,11 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
-  acerto: { 
+  acerto: {
     color: "#059669",
   },
-  
-  erro: { 
+
+  erro: {
     color: "#DC2626",
   },
 

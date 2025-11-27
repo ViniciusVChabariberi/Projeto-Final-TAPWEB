@@ -2,6 +2,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 
 import { useState } from "react";
 import { router } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
+import { Alert } from 'react-native';
+import { api } from "../../services/api";
 
 export default function Register() {
   const [nome, setNome] = useState("");
@@ -11,17 +13,32 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  function handleRegister() {
-    router.replace("/(tabs)");
+  async function handleRegister() {
+    if (!nome || !email || !senha) {
+      return Alert.alert("Erro", "Preencha todos os campos");
+    }
+    if (senha !== confirmarSenha) {
+      return Alert.alert("Erro", "As senhas não coincidem");
+    }
+
+    const resultado = await api.register(nome, email, senha);
+
+    if (resultado.success) {
+      Alert.alert("Sucesso", "Conta criada!", [
+        { text: "OK", onPress: () => router.replace("/(tabs)") }
+      ]);
+    } else {
+      Alert.alert("Erro no Cadastro", resultado.message);
+    }
   }
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.scrollView}
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
-     
+
       <View style={styles.headerContainer}>
         <View style={styles.iconContainer}>
           <Ionicons name="person-add" size={48} color="#10B981" />
@@ -30,9 +47,9 @@ export default function Register() {
         <Text style={styles.subtitle}>Junte-se à comunidade de palpiteiros</Text>
       </View>
 
-     
+
       <View style={styles.card}>
-        
+
         <View style={styles.inputContainer}>
           <Ionicons name="person-outline" size={20} color="#64748B" style={styles.inputIcon} />
           <TextInput
@@ -45,7 +62,7 @@ export default function Register() {
           />
         </View>
 
-       
+
         <View style={styles.inputContainer}>
           <Ionicons name="mail-outline" size={20} color="#64748B" style={styles.inputIcon} />
           <TextInput
@@ -59,7 +76,7 @@ export default function Register() {
           />
         </View>
 
-       
+
         <View style={styles.inputContainer}>
           <Ionicons name="lock-closed-outline" size={20} color="#64748B" style={styles.inputIcon} />
           <TextInput
@@ -70,19 +87,19 @@ export default function Register() {
             style={styles.input}
             placeholderTextColor="#94A3B8"
           />
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => setShowPassword(!showPassword)}
             style={styles.eyeIcon}
           >
-            <Ionicons 
-              name={showPassword ? "eye-outline" : "eye-off-outline"} 
-              size={20} 
-              color="#64748B" 
+            <Ionicons
+              name={showPassword ? "eye-outline" : "eye-off-outline"}
+              size={20}
+              color="#64748B"
             />
           </TouchableOpacity>
         </View>
 
-        
+
         <View style={styles.inputContainer}>
           <Ionicons name="lock-closed-outline" size={20} color="#64748B" style={styles.inputIcon} />
           <TextInput
@@ -93,19 +110,19 @@ export default function Register() {
             style={styles.input}
             placeholderTextColor="#94A3B8"
           />
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => setShowConfirmPassword(!showConfirmPassword)}
             style={styles.eyeIcon}
           >
-            <Ionicons 
-              name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} 
-              size={20} 
-              color="#64748B" 
+            <Ionicons
+              name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
+              size={20}
+              color="#64748B"
             />
           </TouchableOpacity>
         </View>
 
-       
+
         <View style={styles.passwordHint}>
           <Ionicons name="information-circle-outline" size={16} color="#64748B" />
           <Text style={styles.passwordHintText}>
@@ -113,7 +130,7 @@ export default function Register() {
           </Text>
         </View>
 
-       
+
         <TouchableOpacity
           onPress={handleRegister}
           style={styles.registerButton}
@@ -123,15 +140,15 @@ export default function Register() {
           <Ionicons name="checkmark-circle" size={22} color="#FFFFFF" />
         </TouchableOpacity>
 
-    
+
         <View style={styles.divider}>
           <View style={styles.dividerLine} />
           <Text style={styles.dividerText}>ou</Text>
           <View style={styles.dividerLine} />
         </View>
 
-     
-        <TouchableOpacity 
+
+        <TouchableOpacity
           onPress={() => router.push("/(auth)/login")}
           style={styles.loginButton}
           activeOpacity={0.7}
@@ -141,7 +158,7 @@ export default function Register() {
         </TouchableOpacity>
       </View>
 
-      
+
       <Text style={styles.footer}>
         Ao criar uma conta, você concorda com nossos{"\n"}
         <Text style={styles.footerLink}>Termos de Uso</Text> e <Text style={styles.footerLink}>Política de Privacidade</Text>
