@@ -1,4 +1,4 @@
-# # .gitignore Raiz do Monorepo (Combinado)
+# # .gitignore Raiz do Monorepo (Corrigido)
 
 # === Dependências ===
 node_modules/
@@ -17,6 +17,12 @@ lerna-debug.log*
 .env.local
 .env.*.local
 local.properties
+
+# === Chaves Específicas (SEGURANÇA MÁXIMA) ===
+serviceAccountKey.json
+google-services.json
+GoogleService-Info.plist
+firebase-debug.log
 
 # === Build, Cache & Binários ===
 dist/
@@ -38,17 +44,10 @@ out/
 
 # Build - Kotlin/Gradle
 .gradle/
+# Mantém o wrapper (necessário)
 !gradle/wrapper/gradle-wrapper.jar
 
-!**/src/main/**/build/
-!**/src/test/**/build/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
 # === IDE & Editor Config ===
-
 # VS Code
 .vscode/
 !.vscode/extensions.json
@@ -72,7 +71,7 @@ out/
 # NetBeans
 /nbproject/private/
 
-# === Chaves & Certificados ===
+# === Chaves Genéricas & Certificados ===
 *.jks
 *.p8
 *.p12
