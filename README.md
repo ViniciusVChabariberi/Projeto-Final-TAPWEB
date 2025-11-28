@@ -1,7 +1,3 @@
-Aqui está o conteúdo completo para o seu arquivo `README.md`.
-
-Você pode copiar tudo o que está dentro do bloco de código abaixo e colar diretamente no seu arquivo. Não se esqueça de preencher a seção **"Integrantes do Grupo"** no final antes de entregar.
-
 ````markdown
 # ⚽ Bolão da Rodada - Full Stack Project
 
