@@ -1,4 +1,4 @@
-const BASE_URL = 'http://127.0.0.1:3000';
+// const BASE_URL = 'http://ipdoroteador:3000';
 
 interface User {
     id: string;
@@ -26,6 +26,26 @@ export const api = {
             return data;
         } catch (error) {
             console.error("Erro na API getPartidas:", error);
+            return [];
+        }
+    },
+
+    getRanking: async () => {
+        try {
+            const response = await fetch(`${BASE_URL}/ranking`);
+            return await response.json();
+        } catch (error) {
+            console.error("Erro ranking:", error);
+            return [];
+        }
+    },
+
+    getMeusPalpites: async (userId: string) => {
+        try {
+            const response = await fetch(`${BASE_URL}/palpites/${userId}`);
+            return await response.json();
+        } catch (error) {
+            console.error("Erro ao buscar palpites:", error);
             return [];
         }
     },

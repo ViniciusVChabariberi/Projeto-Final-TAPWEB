@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Modal, Pressable } from 'react-native';
 import { api } from "../../services/api";
+import { useFocusEffect } from 'expo-router';
 
 interface Partida {
   id: string;
@@ -14,12 +15,58 @@ interface Partida {
   resultadoRealB?: number;
   placarRealA?: number;
   placarRealB?: number;
+  pontosGanhos?: number;
 }
 
 export default function DashboardScreen() {
   const [partidas, setPartidas] = useState<Partida[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+
+  const fetchDados = async () => {
+    try {
+      setLoading(true);
+      const user = api.getUsuario(); // Pega o usuário logado
+
+      // 1. Busca as Partidas
+      const listaPartidas = await api.getPartidas();
+
+      // 2. Busca os Palpites (se estiver logado)
+      let listaPalpites = [];
+      if (user) {
+        listaPalpites = await api.getMeusPalpites(user.id);
+      }
+
+      // 3. FUSÃO: Preenche as partidas com os palpites encontrados
+      const partidasMescladas = listaPartidas.map((p: Partida) => {
+        // Tenta achar um palpite para essa partida
+        const palpite = listaPalpites.find((palp: any) => palp.partidaId === p.id);
+
+        if (palpite) {
+          return {
+            ...p,
+            placarA: palpite.placarA, // Preenche com o que você palpitou
+            placarB: palpite.placarB,
+            pontosGanhos: palpite.pontosGanhos || 0 // Pega os pontos
+          };
+        }
+        return p;
+      });
+
+      setPartidas(partidasMescladas);
+    } catch (error) {
+      console.log("Erro ao carregar dashboard", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Usa useFocusEffect para recarregar sempre que entrar na tela
+  useFocusEffect(
+    useCallback(() => {
+      fetchDados();
+    }, [])
+  );
 
   const fetchPartidas = async () => {
     try {
@@ -37,7 +84,7 @@ export default function DashboardScreen() {
     fetchPartidas();
   }, []);
 
-  const atualizarPalpite = (id: string, time: 'A' | 'B', valor: string) => {
+  const atualizarPalpiteLocal = (id: string, time: 'A' | 'B', valor: string) => {
     setPartidas(prev =>
       prev.map(p =>
         p.id === id
@@ -48,7 +95,7 @@ export default function DashboardScreen() {
   };
 
   const enviarPalpiteEspecifico = async (item: Partida) => {
-    if (!item.placarA || !item.placarB) {
+    if (item.placarA === undefined || item.placarB === undefined || item.placarA === '' || item.placarB === '') {
       alert("Preencha o placar!");
       return;
     }
@@ -57,17 +104,20 @@ export default function DashboardScreen() {
 
     if (resultado.success) {
       setModalVisible(true);
+      fetchDados();
     } else {
       alert("Erro: " + resultado.message);
     }
   };
 
-  const renderCard = ({ item }: { item: any }) => {
+  const renderCard = ({ item }: { item: Partida }) => {
     const statusNormalizado = item.status ? item.status.toLowerCase() : 'aberta';
     const isEncerrada = statusNormalizado === 'encerrada' || statusNormalizado === 'apurada';
+
     const realA = item.placarRealA ?? item.resultadoRealA;
     const realB = item.placarRealB ?? item.resultadoRealB;
-    const acertou = isEncerrada && item.placarA == realA && item.placarB == realB;
+
+    const acertou = isEncerrada && Number(item.placarA) === realA && Number(item.placarB) === realB;
 
     return (
       <View style={[
@@ -80,7 +130,7 @@ export default function DashboardScreen() {
           {isEncerrada && (
             <View style={[styles.statusBadge, acertou ? styles.badgeAcerto : styles.badgeErro]}>
               <Text style={[styles.status, acertou ? styles.acerto : styles.erro]}>
-                {acertou ? "✔ Acertou!" : "✘ Errou"}
+                {acertou ? "✔ Na Mosca!" : "✘ Errou"}
               </Text>
             </View>
           )}
@@ -89,18 +139,18 @@ export default function DashboardScreen() {
         <View style={styles.match}>
           <View style={styles.team}>
             <Text style={styles.teamName}>{item.timeA}</Text>
-
             {isEncerrada ? (
-              <Text style={styles.scoreFinal}>
-                {item.placarRealA} <Text style={styles.palpite}>({item.placarA})</Text>
-              </Text>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={styles.scoreFinal}>{realA}</Text>
+                <Text style={styles.palpiteLabel}>Seu palpite: {item.placarA ?? '-'}</Text>
+              </View>
             ) : (
               <TextInput
                 style={styles.input}
-                value={item.placarA}
+                value={item.placarA?.toString()}
                 maxLength={2}
                 keyboardType="numeric"
-                onChangeText={t => atualizarPalpite(item.id, "A", t)}
+                onChangeText={t => atualizarPalpiteLocal(item.id, "A", t)}
                 placeholder="0"
                 placeholderTextColor="#CBD5E1"
               />
@@ -111,18 +161,18 @@ export default function DashboardScreen() {
 
           <View style={styles.team}>
             <Text style={styles.teamName}>{item.timeB}</Text>
-
             {isEncerrada ? (
-              <Text style={styles.scoreFinal}>
-                {item.placarRealB} <Text style={styles.palpite}>({item.placarB})</Text>
-              </Text>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={styles.scoreFinal}>{realB}</Text>
+                <Text style={styles.palpiteLabel}>Seu palpite: {item.placarB ?? '-'}</Text>
+              </View>
             ) : (
               <TextInput
                 style={styles.input}
-                value={item.placarB}
+                value={item.placarB?.toString()}
                 maxLength={2}
                 keyboardType="numeric"
-                onChangeText={t => atualizarPalpite(item.id, "B", t)}
+                onChangeText={t => atualizarPalpiteLocal(item.id, "B", t)}
                 placeholder="0"
                 placeholderTextColor="#CBD5E1"
               />
@@ -130,7 +180,12 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {!isEncerrada && (
+        {isEncerrada ? (
+          <View style={styles.pointsContainer}>
+            <Text style={styles.pointsLabel}>Pontos obtidos:</Text>
+            <Text style={styles.pointsValue}>+{item.pontosGanhos ?? 0}</Text>
+          </View>
+        ) : (
           <TouchableOpacity
             style={styles.button}
             onPress={() => enviarPalpiteEspecifico(item)}
@@ -148,9 +203,9 @@ export default function DashboardScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Meus Palpites</Text>
-        <Text style={styles.subtitle}>Faça suas previsões e acompanhe os resultados</Text>
-        <TouchableOpacity onPress={fetchPartidas}>
-          <Text style={{ color: '#0EA5E9', marginTop: 5 }}>↻ Atualizar Lista</Text>
+        <Text style={styles.subtitle}>Acompanhe seus resultados</Text>
+        <TouchableOpacity onPress={fetchDados}>
+          <Text style={{ color: '#0EA5E9', marginTop: 5 }}>↻ Atualizar</Text>
         </TouchableOpacity>
       </View>
 
@@ -159,12 +214,10 @@ export default function DashboardScreen() {
         renderItem={renderCard}
         keyExtractor={i => i.id || Math.random().toString()}
         refreshing={loading}
-        onRefresh={fetchPartidas}
+        onRefresh={fetchDados}
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       />
-
-
 
       <Modal
         visible={modalVisible}
@@ -173,9 +226,8 @@ export default function DashboardScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Palpite enviado!</Text>
-            <Text style={styles.modalText}>Seu palpite foi registrado com sucesso.</Text>
-
+            <Text style={styles.modalTitle}>Sucesso!</Text>
+            <Text style={styles.modalText}>Palpite salvo.</Text>
             <Pressable
               onPress={() => setModalVisible(false)}
               style={styles.modalButton}
@@ -185,8 +237,6 @@ export default function DashboardScreen() {
           </View>
         </View>
       </Modal>
-
-
     </View>
   );
 }
@@ -197,6 +247,38 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFB",
     paddingTop: 60,
     paddingHorizontal: 20,
+  },
+
+  palpiteLabel: {
+    fontSize: 12,
+    color: "#64748B",
+    marginTop: 4,
+    fontWeight: "600"
+  },
+
+  pointsContainer: {
+    backgroundColor: "#F0F9FF",
+    padding: 12,
+    borderRadius: 12,
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "#BAE6FD"
+  },
+
+  pointsLabel: {
+    color: "#0369A1",
+    fontWeight: "600",
+    fontSize: 14
+  },
+
+  pointsValue: {
+    color: "#0284C7",
+    fontWeight: "900",
+    fontSize: 18
   },
 
   header: {

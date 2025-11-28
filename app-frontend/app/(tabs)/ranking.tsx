@@ -1,31 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-// MOCK API
-const RANKING_DATA = [
-  { id: '1', nome: 'Carlos Silva', pontos: 150, posicao: 1 },
-  { id: '2', nome: 'Ana Paula', pontos: 140, posicao: 2 },
-  { id: '3', nome: 'Marcos Dev', pontos: 120, posicao: 3 },
-  { id: '4', nome: 'Julia Frontend', pontos: 90, posicao: 4 },
-  { id: '5', nome: 'Pedro Santos', pontos: 85, posicao: 5 },
-  { id: '6', nome: 'Beatriz Lima', pontos: 78, posicao: 6 },
-];
+import { api } from "../../services/api";
 
 export default function RankingScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [ranking, setRanking] = useState([]);
+
+  useEffect(() => {
+    api.getRanking().then(dados => setRanking(dados));
+  }, []);
 
   const renderItem = ({ item }: { item: any }) => {
     const isTop3 = item.posicao <= 3;
     const isSelected = selectedId === item.id;
 
+
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => setSelectedId(isSelected ? null : item.id)}
       >
         <View style={[
-          styles.row, 
+          styles.row,
           isTop3 && styles.rowTop3,
           isSelected && styles.rowSelected
         ]}>
@@ -34,9 +31,9 @@ export default function RankingScreen() {
               {item.posicao}º
             </Text>
             {isTop3 && (
-              <Ionicons 
-                name={item.posicao === 1 ? "trophy" : "medal"} 
-                size={16} 
+              <Ionicons
+                name={item.posicao === 1 ? "trophy" : "medal"}
+                size={16}
                 color={item.posicao === 1 ? "#FFD700" : item.posicao === 2 ? "#C0C0C0" : "#CD7F32"}
                 style={styles.medal}
               />
@@ -74,12 +71,12 @@ export default function RankingScreen() {
       <View style={styles.card}>
         <View style={styles.tableHeader}>
           <Text style={styles.tableTitle}>Pos</Text>
-          <Text style={[styles.tableTitle, { flex: 1 }]}>Jogador</Text>
+          <Text style={[styles.tableTitle, { flex: 1, paddingLeft: 24 }]}>Jogador</Text>
           <Text style={styles.tableTitle}>Pontos</Text>
         </View>
 
         <FlatList
-          data={RANKING_DATA}
+          data={ranking}
           keyExtractor={item => item.id}
           renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: 20 }}
@@ -112,7 +109,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
-    
+
     shadowColor: "#F59E0B",
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -138,13 +135,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
     overflow: "hidden",
-    
+
     shadowColor: "#0F172A",
     shadowOpacity: 0.08,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
-    
+
     borderWidth: 1,
     borderColor: "rgba(15, 23, 42, 0.06)",
   },

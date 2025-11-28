@@ -2,8 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
 
-// 1. Configuração do Firebase
-// Ele carrega a chave que você colou na pasta
 const serviceAccount = require('./serviceAccountKey.json');
 
 admin.initializeApp({
@@ -12,24 +10,19 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-// 2. Configuração do Servidor Express
 const app = express();
-app.use(cors()); // Libera acesso para todos (App e Site)
-app.use(express.json()); // Permite ler JSON enviado pelo App
+app.use(cors());
+app.use(express.json());
 
-// --- ROTAS (ENDPOINTS) ---
 
-// 1. LISTAR PARTIDAS (GET /partidas)
-// É essa rota que o seu App vai chamar!
 app.get('/partidas', async (req, res) => {
   try {
     const snapshot = await db.collection('partidas').get();
     
     if (snapshot.empty) {
-      return res.json([]); // Retorna lista vazia se não tiver jogos
+      return res.json([]);
     }
 
-    // Transforma os documentos do Firebase em um array bonitinho
     const partidas = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -41,7 +34,6 @@ app.get('/partidas', async (req, res) => {
   }
 });
 
-// 2. LOGIN (POST /login)
 app.post('/login', async (req, res) => {
   try {
     const { email, senha } = req.body;
@@ -56,12 +48,10 @@ app.post('/login', async (req, res) => {
     const userDoc = snapshot.docs[0];
     const userData = userDoc.data();
 
-    // Verifica senha (simples para o projeto)
     if (userData.senha !== senha) {
       return res.status(401).json({ error: 'Senha incorreta' });
     }
 
-    // Devolve sucesso e dados do usuário
     res.json({
       success: true,
       id: userDoc.id,
@@ -75,7 +65,6 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// 3. REGISTRO (POST /register)
 app.post('/register', async (req, res) => {
   try {
     const { nome, email, senha } = req.body;
@@ -107,7 +96,6 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// 4. DAR PALPITE (POST /palpite)
 app.post('/palpite', async (req, res) => {
   try {
     const { userId, partidaId, placarA, placarB } = req.body;
@@ -120,7 +108,6 @@ app.post('/palpite', async (req, res) => {
       pontosGanhos: 0
     };
 
-    // Salva no banco
     const docRef = await db.collection('palpites').add(palpiteData);
 
     res.status(201).json({ success: true, id: docRef.id });
@@ -130,7 +117,6 @@ app.post('/palpite', async (req, res) => {
   }
 });
 
-// 5. RANKING (GET /ranking)
 app.get('/ranking', async (req, res) => {
   try {
     const snapshot = await db.collection('usuarios')
@@ -150,7 +136,24 @@ app.get('/ranking', async (req, res) => {
   }
 });
 
-// --- INICIAR SERVIDOR ---
+app.get('/palpites/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const snapshot = await db.collection('palpites')
+      .where('userId', '==', userId)
+      .get();
+
+    const palpites = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    res.json(palpites);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`🔥 Node.js rodando na porta ${PORT}`);
