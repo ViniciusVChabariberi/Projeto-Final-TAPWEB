@@ -10,6 +10,7 @@ Este projeto é uma aplicação móvel para gerenciamento de bolões de futebol,
 O projeto foi construído integrando dois ecossistemas de Back-end distintos, conforme requisitos da disciplina:
 
 * **Front-end Mobile:** React Native (Expo) + TypeScript.
+* **Front-end Web Site:** React (Vite) + TypeScript.
 * **Back-end (Cliente):** Node.js + Express (Focado em I/O e leitura rápida).
 * **Back-end (Admin):** Kotlin + Ktor (Focado em Regras de Negócio e Apuração).
 * **Banco de Dados:** Firebase Firestore (NoSQL).
@@ -21,6 +22,7 @@ O projeto foi construído integrando dois ecossistemas de Back-end distintos, co
 O repositório está organizado em três pastas principais:
 
 * `/app-frontend` - Código fonte do aplicativo móvel (React Native).
+* `/web-frontend` - Código fonte do web site (React).
 * `/service-node` - API REST (Node.js) para autenticação e consumo de dados pelo app.
 * `/service-kotlin` - API REST (Kotlin) para cadastro de partidas e apuração de resultados.
 
